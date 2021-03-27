@@ -1,0 +1,3 @@
+[submodule "coding/kwic_ngrams"]
+	path = coding/kwic_ngrams
+	url = git@github.com:psresnik/kwic_ngrams.git

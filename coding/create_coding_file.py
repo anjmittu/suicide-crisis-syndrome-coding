@@ -5,7 +5,25 @@ from kwic_ngrams.kwic import *
 from utils import *
 
 
-def create_examples_sheet():
+def get_max_variations(clusters):
+    max_variations = 0
+    for c in clusters:
+        max_variations = max(max_variations, len(split_variations(c[3])))
+
+    return max_variations
+
+
+def get_keyword_examples(keywords, max_variations, kindex):
+    examples = []
+    num_ex_per_kw = (max_variations + 1) * 3 // len(keywords)
+    for kw in keywords:
+        kwic_string_list = kwic_query(kindex, convert_string_for_kwic(kw), window_width, True)
+        examples.extend(kwic_string_list[:num_ex_per_kw])
+
+    return examples
+
+
+def create_examples_sheet(clusters):
     workbook = xlsxwriter.Workbook('../output_spreadsheets/examples.xlsx')
     worksheet = workbook.add_worksheet()
 
@@ -28,18 +46,27 @@ def create_examples_sheet():
     for header_pos in headings.keys():
         worksheet.write(header_pos, headings[header_pos], header_format)
 
-    clusters = read_clusters_file()
+    max_variations = get_max_variations(clusters)
+    # Read KWIC index from a file
+    log.info("Reading KWIC index")
+    kindex = read_kwic_index(kwicfile)
+
+    sheet_ind = 1
     for i, cluster in enumerate(clusters):
         # Skip the header
         if i != 0:
-            worksheet.write_string(i, 0, cluster[0])
-            worksheet.write_string(i, 1, cluster[1])
-            worksheet.write_string(i, 3, cluster[3])
+            worksheet.write_string(sheet_ind, 0, cluster[0])
+            worksheet.write_string(sheet_ind, 1, cluster[1])
+            worksheet.write_string(sheet_ind, 3, cluster[3])
+            sheet_ind += 1
+            for ex in get_keyword_examples([cluster[1]] + split_variations(cluster[3]), max_variations, kindex):
+                worksheet.write_string(sheet_ind, 3, ex)
+                sheet_ind += 1
 
     workbook.close()
 
 
-def create_coding_sheet():
+def create_coding_sheet(clusters):
     workbook = xlsxwriter.Workbook('../output_spreadsheets/coding.xlsx')
     worksheet = workbook.add_worksheet()
 
@@ -73,7 +100,6 @@ def create_coding_sheet():
     for header_pos in headings.keys():
         worksheet.write(header_pos, headings[header_pos], header_format)
 
-    clusters = read_clusters_file()
     for i, cluster in enumerate(clusters):
         # Skip the header
         if i != 0:
@@ -98,21 +124,10 @@ def create_coding_sheet():
     workbook.close()
 
 
-def create_contexts():
-    # Read KWIC index from a file
-    log.info("Reading KWIC index")
-    kindex = read_kwic_index(kwicfile)
-
-    kwic_string_list = kwic_query(kindex, "i_think_i", window_width, True)
-    for kwic_string in kwic_string_list[:3]:
-        print(kwic_string)
-
-
-
 def main():
-    create_examples_sheet()
-    create_coding_sheet()
-    create_contexts()
+    clusters = read_clusters_file()
+    create_examples_sheet(clusters)
+    create_coding_sheet(clusters)
 
 
 if __name__ == "__main__":

@@ -20,14 +20,6 @@ def create_corpus_for_kwic(corpusfile):
         all_posts.writelines(posts)
 
 
-def convert_string_for_kwic(string):
-    return string.replace(" ", "_")
-
-
-def split_variations(v):
-    return v.split(", ")
-
-
 def get_known_terms():
     known_terms = Counter()
     clusters = read_clusters_file()

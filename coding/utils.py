@@ -17,3 +17,14 @@ def read_clusters_file():
             for cluster in clusters:
                 cluster_data.append(cluster)
     return cluster_data
+
+
+def split_variations(v):
+    v = v.split(", ")
+    while "" in v:
+        v.remove("")
+    return v
+
+
+def convert_string_for_kwic(string):
+    return string.replace(" ", "_")

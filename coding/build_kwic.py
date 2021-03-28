@@ -1,5 +1,4 @@
 import os
-import logging as log
 from collections import Counter
 from spacy.lang.en import English
 
@@ -8,6 +7,11 @@ from utils import *
 
 
 def create_corpus_for_kwic(corpusfile):
+    """
+    Reads in the r/SuicideWatch and other reddit posts and writes them to a file formatted for kwic code.
+
+    :param corpusfile: The path to save the temporary corpus file
+    """
     posts = []
     with open('../input/tokenized_sw_posts.txt', newline='') as sw_posts:
         posts.extend(sw_posts.readlines())
@@ -21,42 +25,50 @@ def create_corpus_for_kwic(corpusfile):
 
 
 def get_known_terms():
+    """
+    Creates a counter will all the key words and variations from the clusters.  This will format the phases for kwic
+    by replacing spaces with underscores.
+
+    :return: a counter will all the key words and variations from the clusters
+    """
     known_terms = Counter()
     clusters = read_clusters_file()
 
     for cluster in clusters:
-        known_terms[convert_string_for_kwic(cluster[1])] = 1
-        for term in split_variations(cluster[3]):
+        known_terms[convert_string_for_kwic(cluster["keyword"])] = 1
+        for term in split_variations(cluster["variations"]):
             if term:
-                print(convert_string_for_kwic(term))
                 known_terms[convert_string_for_kwic(term)] = 1
 
     return known_terms
 
 
 def create_contexts():
+    """
+    This will create a KWIC index file which can be read by another script.  Creates a temporary corpus file formated
+    for kwic.  Loops through all the clusters to find all the key words and variations and creates an index
+    with these phases.  This index file is writen to a file defined in utils.py
+    """
     try:
-        create_corpus_for_kwic(corpusfile)
+        # Read in the reddit post and save them to a file for kwic
+        create_corpus_for_kwic(CORPUS_FILE)
 
+        # Get a counter with all the known terms.  Save this to a pickle file
         known_terms = get_known_terms()
-        pickle.dump([known_terms, 0], open(countfile, "wb"))
+        pickle.dump([known_terms, 0], open(COUNT_FILE, "wb"))
 
         # Initialize text processing
-        log.info("Initializing spacy")
+        logger.info("Initializing spacy")
         nlp = English(parser=False)  # faster init
 
         # Create the KWIC index
-        os.remove(kwicfile)
-        log.info("Creating KWIC index file {}".format(kwicfile))
-        create_kwic_index(nlp, corpusfile, countfile, kwicfile, window_width)
+        os.remove(KWIC_FILE)
+        logger.info("Creating KWIC index file {}".format(KWIC_FILE))
+        create_kwic_index(nlp, CORPUS_FILE, COUNT_FILE, KWIC_FILE, window_width)
     finally:
-        os.remove(corpusfile)
-        os.remove(countfile)
-
-
-def main():
-    create_contexts()
+        os.remove(CORPUS_FILE)
+        os.remove(COUNT_FILE)
 
 
 if __name__ == "__main__":
-    main()
+    create_contexts()

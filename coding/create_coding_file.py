@@ -105,7 +105,7 @@ def add_coding_columns(worksheet, l):
                                            'source': ['Entrapment', 'Affective Disturbance',
                                                       'Loss of Cognitive Control',
                                                       'Hyperarousal', 'Social Withdrawal', 'Suicidal Intent',
-                                                      'Passive Suicidal Ideation',
+                                                      'Passive Suicidal Ideation', 
                                                       'Other relevant things that might indicate a suicidal crisis',
                                                       'None of the Above']})
 

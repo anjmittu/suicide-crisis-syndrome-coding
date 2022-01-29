@@ -1,4 +1,17 @@
 # suicide-crisis-syndrome-coding
+#
+# This repository contains code that will take a set of keyword
+# clusters like
+#
+#   CLUSTERNAME, MAIN KEYWORD,  SCORE                        ,"OTHER KEYWORDS"
+#   Cluster 40,       no friends,           13.617213991153418,"have no friends, no friends ,, no friends ., , no friends"
+#
+# and create an Excel spreadsheet suitable for coding and/or analysis.
+# It is currently specific -- in fact, hardwired -- for the specific
+# goal of creating coding spreadsheets for Reddit data. The clusters
+# are groups of keywords that appear statistically more frequently in
+# r/Suicidewatch and the coding is for criteria in Suicide Crisis Syndrome.
+
 
 ## Set up
 1. Pull this repo

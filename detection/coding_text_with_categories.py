@@ -6,21 +6,34 @@ from nltk import ngrams
 from collections import defaultdict
 import argparse
 from tqdm import tqdm
+from parameters import *
+import sys
+
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--infile', default=None)
+    parser.add_argument('--codedfile', default=None)
+    parser.add_argument('--clusterfile', default=None)
+    parser.add_argument('--outfile', default=None)
     parser.add_argument('--primary_only', default=False, action='store_true')
     parser.add_argument('--include_coder', default=None)
     parser.add_argument('--use_scores', default=False, action='store_true')
     args = parser.parse_args()
-    
+
+    if (args.infile is None or args.codedfile is None or args.clusterfile is None or args.outfile is None):
+        sys.exit("Required arguments: --infile, --codedfile, --clusterfile, --outfile. Use --help to see all commandline parameters.\n")
+
+    if (args.include_coder is None):
+        args.include_coder = ",".join(valid_coders)
+    print("Using coders: {}".format(args.include_coder))
+        
     return args
 
 
 def check_coder(include_coder):
     # Print a warning if the input coder name is not in the coder list
-    valid_coders = ['Megan', 'Gabriele', 'Alexis', 'Devon', 'Anokhi', 'Benedetta', 'Jenelle']
     for coder in args.include_coder.split(','):
         if coder not in valid_coders:
             print(f'Warning: the input name is not a valid coder. Please check again.')
@@ -62,6 +75,10 @@ def read_code_and_cluster(code, cluster):
 def split_variants(text):
     # Replace the double comma with simple comma, and deduplicate
     # The input is a string and the output is a list of deduplicated string
+    # NOTE: this treatment of double commas is a bit of a kludge for the
+    # particular instance of the input file being used to develop the code.
+    # In future, the input format will change so that the input text
+    # for this routine will use '||' as the delimiter for variants.
     text = text.replace(',,', ',')
     text = list(set([i.strip() for i in text.split(',')]))
     
@@ -139,7 +156,7 @@ def process(args, lines, cluster, code, output_file='result.txt'):
                 if clu in matched_clusters:
                     continue
                 
-                # Iterate through all the variants, tke keyword itself is included in it.
+                # Iterate through all the variants, the keyword itself is included in it.
                 for var in variants: 
                     if var not in line:
                         continue 
@@ -186,6 +203,7 @@ def process(args, lines, cluster, code, output_file='result.txt'):
 
 
 if __name__ == '__main__':
+
     args = parse_args()
 
     if args.use_scores and args.primary_only:
@@ -198,14 +216,12 @@ if __name__ == '__main__':
     # Set up and read in the files. 
     # The coded_clusters_file is named "code" and the cluster_info_file is named "cluster" for simplicity
     nlp = spacy.load('en_core_web_sm')
-    lines = read_doc('sw_examples.txt', nlp)
-    code, cluster = read_code_and_cluster(
-        'SCS Keyword Pilot Coding_Combined.csv',
-        'phrase_clusters_8K_3_minscore3_oneline.csv')
+    lines = read_doc(args.infile, nlp)
+    code, cluster = read_code_and_cluster(args.codedfile, args.clusterfile)
 
     # Filter the code table based on the options
     if not args.use_scores:
         code = filter_code(code, args.primary_only, args.include_coder)
 
     # Process the document and output to a text file named result 
-    process(args, lines, cluster, code, output_file='result.txt')
+    process(args, lines, cluster, code, args.outfile)
